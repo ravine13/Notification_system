@@ -5,6 +5,7 @@ import com.NotificationSystem.repositories.NotificationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,6 +27,17 @@ public class NotificationService {
 
     // Create or update notification
     public Notification saveNotification(Notification notification) {
+        LocalDateTime now = LocalDateTime.now();
+        if (notification.getId() == null) {
+            notification.setCreatedAt(now);
+            // CHANGED: default to SMS if the caller didn't specify a channel
+            // (e.g. your existing manual "create notification" form on the
+            // Notifications page doesn't have a channel selector yet).
+            if (notification.getChannel() == null) {
+                notification.setChannel(Notification.Channel.SMS);
+            }
+        }
+        notification.setUpdatedAt(now);
         return notificationRepository.save(notification);
     }
 

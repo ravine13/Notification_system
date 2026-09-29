@@ -41,8 +41,7 @@ public class ResidentService {
     public void deleteResidentById(Long id) {
         residentRepository.deleteById(id);
     }
-//    public List<Resident> saveResidents(List<Resident> residents) {
-//        return residentRepository.saveAll(residents);
+
 //    }
     public List<Resident> updateResidents(List<Resident> residents) {
         return residentRepository.saveAll(residents);

@@ -36,14 +36,29 @@ public class Notification {
     @Column(nullable = false)
     private Status status = Status.PENDING;
 
+    // CHANGED: new field, matches the `channel` column we just added to the DB.
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Channel channel;
+
     private LocalDateTime sentAt;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
+
+    @Column(nullable = false)
+    private LocalDateTime updatedAt = LocalDateTime.now();
+
     public enum Status {
         PENDING,
         SENT,
         FAILED
+    }
+
+
+    public enum Channel {
+        SMS,
+        WHATSAPP
     }
 }

@@ -1,12 +1,15 @@
 package com.NotificationSystem.controller;
 
+import com.NotificationSystem.entities.Notification;
 import com.NotificationSystem.entities.Schedule;
+import com.NotificationSystem.service.NotificationDispatchService;
 import com.NotificationSystem.service.ScheduleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -15,6 +18,9 @@ public class ScheduleController {
 
     @Autowired
     private ScheduleService scheduleService;
+
+    @Autowired
+    private NotificationDispatchService notificationDispatchService;
 
     @GetMapping
     public ResponseEntity<List<Schedule>> getAllSchedules() {
@@ -82,6 +88,14 @@ public class ScheduleController {
         } else {
             return ResponseEntity.notFound().build();
         }
+    }
+    @PostMapping("/{id}/notify")
+    public ResponseEntity<?> notifyZone(
+            @PathVariable Long id,
+            @RequestParam("channel") Notification.Channel channel) {
+
+        int queued = notificationDispatchService.queueZoneNotifications(id, channel);
+        return ResponseEntity.ok(Map.of("queued", queued));
     }
 }
 
