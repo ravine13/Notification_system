@@ -24,7 +24,7 @@ public class User {
     @Column(nullable = false, length = 255)
     private String name;
 
-    @Column(nullable = false, length = 255)
+    @Column(nullable = false, length = 255,unique = true)
     private String email;
 
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
@@ -32,7 +32,7 @@ public class User {
     private String password;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, updatable = false)
     private Role role = Role.STAFF;
 
     @Column(nullable = false, updatable = false)

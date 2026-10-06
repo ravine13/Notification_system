@@ -25,24 +25,23 @@ public class UserService {
     public Optional<User> getUserById(Long id) {
         return userRepository.findById(id);
     }
+    public  Optional<User> getUserByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
 
-    // CHANGED: this whole method is new — replaces the old saveUser() for creation.
-    // Hashes the incoming plaintext password before it ever touches the database.
     public User createUser(User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
 
-    // CHANGED: this whole method is new — replaces the old saveUser() for updates.
-    // Fetches the existing row, updates the editable fields, and only re-hashes
-    // the password if a new one was actually sent (so editing name/role doesn't
-    // wipe out the user's password).
     public Optional<User> updateUser(Long id, User updatedUser) {
         return userRepository.findById(id).map(existing -> {
-            existing.setName(updatedUser.getName());
-            existing.setEmail(updatedUser.getEmail());
-            existing.setRole(updatedUser.getRole());
-
+            if (updatedUser.getName() != null && !updatedUser.getName().isBlank()) {
+                existing.setName(updatedUser.getName());
+            }
+            if (updatedUser.getEmail() != null && !updatedUser.getEmail().isBlank()) {
+                existing.setEmail(updatedUser.getEmail());
+            }
             if (updatedUser.getPassword() != null && !updatedUser.getPassword().isBlank()) {
                 existing.setPassword(passwordEncoder.encode(updatedUser.getPassword()));
             }
@@ -50,9 +49,6 @@ public class UserService {
             return userRepository.save(existing);
         });
     }
-
-    // REMOVED: the old `public User saveUser(User user) { return userRepository.save(user); }`
-    // is gone — it used to save passwords as plain text with no hashing at all.
 
     public void deleteUser(Long id) {
         userRepository.deleteById(id);
