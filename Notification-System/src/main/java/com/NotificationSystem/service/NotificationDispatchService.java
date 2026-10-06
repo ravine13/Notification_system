@@ -6,9 +6,12 @@ import com.NotificationSystem.entities.Schedule;
 import com.NotificationSystem.repositories.NotificationRepository;
 import com.NotificationSystem.repositories.ResidentRepository;
 import com.NotificationSystem.repositories.ScheduleRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
+
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,6 +29,8 @@ public class NotificationDispatchService {
     private NotificationRepository notificationRepository;
     @Autowired
     private AfricaTalkingSmsService smsService;
+    @Value("${whatsapp.mode:text}")
+    private String whatsappMode;
     @Autowired
     private WhatsAppService whatsAppService;
 
@@ -34,7 +39,6 @@ public class NotificationDispatchService {
                 .orElseThrow(() -> new RuntimeException("Schedule not found"));
 
         List<Resident> residents = residentRepository.findByZone_Id(schedule.getZone().getId());
-
 
         List<Notification> existing = notificationRepository.findBySchedule_Id(scheduleId);
         Set<Long> alreadyNotified = existing.stream()
@@ -77,20 +81,24 @@ public class NotificationDispatchService {
                 if (n.getChannel() == Notification.Channel.SMS) {
                     smsService.sendSms(n.getPhoneNumber(), n.getMessage());
                 } else {
-                    // CHANGED: use the approved template instead of free text.
-                    // collectionDate is pulled from the schedule via the notification's message,
-                    // but cleaner to pass it explicitly — see note below.
-                    String collectionDate = n.getSchedule().getCollectionDate().toString();
-                    whatsAppService.sendTemplateMessage(
-                            n.getPhoneNumber(),
-                            "collection_reminder",
-                            "en",
-                            collectionDate
-                    );
+                    String response;
+                    if ("template".equalsIgnoreCase(whatsappMode)) {
+                        String collectionDate = n.getSchedule().getCollectionDate().toString();
+                        response = whatsAppService.sendTemplateMessage(
+                                n.getPhoneNumber(),
+                                "collection_reminder",
+                                "en",
+                                collectionDate
+                        );
+                    } else {
+                        response = whatsAppService.sendMessage(n.getPhoneNumber(), n.getMessage());
+                    }
+                    n.setWhatsappMessageId(extractMessageId(response));
                 }
                 n.setStatus(Notification.Status.SENT);
                 n.setSentAt(LocalDateTime.now());
             } catch (Exception e) {
+                System.out.println("Dispatch Failed for " + n.getPhoneNumber() + ": " + e.getMessage());
                 n.setStatus(Notification.Status.FAILED);
             }
             n.setUpdatedAt(LocalDateTime.now());
@@ -102,4 +110,14 @@ public class NotificationDispatchService {
             }
         }
     }
+
+    private String extractMessageId(String json) {
+        try {
+            return new ObjectMapper().readTree(json)
+                    .path("messages").path(0).path("id").asText(null);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
 }

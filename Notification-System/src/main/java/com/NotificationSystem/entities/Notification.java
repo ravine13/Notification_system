@@ -53,7 +53,9 @@ public class Notification {
     public enum Status {
         PENDING,
         SENT,
-        FAILED
+        FAILED,
+        DELIVERED,
+        READ
     }
 
 
@@ -61,4 +63,10 @@ public class Notification {
         SMS,
         WHATSAPP
     }
+
+    @Column(name = "whatsapp_message_id")
+    private String whatsappMessageId;
+
+    @Column(name = "error_detail")
+    private String errorDetail;
 }

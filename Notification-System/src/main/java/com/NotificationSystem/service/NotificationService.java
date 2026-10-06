@@ -30,9 +30,6 @@ public class NotificationService {
         LocalDateTime now = LocalDateTime.now();
         if (notification.getId() == null) {
             notification.setCreatedAt(now);
-            // CHANGED: default to SMS if the caller didn't specify a channel
-            // (e.g. your existing manual "create notification" form on the
-            // Notifications page doesn't have a channel selector yet).
             if (notification.getChannel() == null) {
                 notification.setChannel(Notification.Channel.SMS);
             }

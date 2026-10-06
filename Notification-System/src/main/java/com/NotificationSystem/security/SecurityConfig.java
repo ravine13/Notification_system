@@ -85,7 +85,8 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/auth/authenticate",
                                 "/api/auth/register",
-                                "/test/**"
+                                "/test/**",
+                                "/webhook/**"
                         ).permitAll()
 
                         // Admin endpoints

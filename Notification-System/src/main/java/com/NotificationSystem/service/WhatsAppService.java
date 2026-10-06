@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
@@ -70,9 +71,12 @@ public class WhatsAppService {
             System.out.println("WhatsApp template response: " + response.getBody());
             return response.getBody();
 
-        } catch (HttpClientErrorException e) {
-            System.out.println("WhatsApp template error: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
-            return "WhatsApp API Error: " + e.getStatusCode() + " - " + e.getResponseBodyAsString();
+        } catch (HttpStatusCodeException e) {
+            System.out.println("WhatsApp error: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
+            throw new RuntimeException("WhatsApp failed: " + e.getResponseBodyAsString(), e);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("WhatsApp unexpected error: " + e.getMessage(), e);
         }
     }
 
@@ -91,7 +95,7 @@ public class WhatsAppService {
 
         Map<String, Object> body = new HashMap<>();
         body.put("messaging_product", "whatsapp");
-        body.put("to", phoneNumber);
+        body.put("to", phoneNumber.replaceAll("[^0-9]", ""));
         body.put("type", "text");
 
         Map<String, Object> text = new HashMap<>();
@@ -105,7 +109,36 @@ public class WhatsAppService {
                     restTemplate.postForEntity(url, request, String.class);
             return response.getBody();
         } catch (HttpClientErrorException e) {
-            return "WhatsApp API Error: " + e.getStatusCode() + " - " + e.getResponseBodyAsString();
+            System.out.println("Whatsapp error: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
+            throw new RuntimeException("WhatsApp failed: " + e.getResponseBodyAsString(), e);
+
         }
     }
+
+//
+//    public String sendHelloWorld(String phoneNumber) {
+//        String url = "https://graph.facebook.com/" + apiVersion + "/" + phoneNumberId + "/messages";
+//
+//        HttpHeaders headers = new HttpHeaders();
+//        headers.setContentType(MediaType.APPLICATION_JSON);
+//        headers.setBearerAuth(accessToken);
+//
+//        Map<String, Object> body = new HashMap<>();
+//        body.put("messaging_product", "whatsapp");
+//        body.put("to", phoneNumber.replaceAll("[^0-9]", ""));
+//        body.put("type", "template");
+//        body.put("template", Map.of(
+//                "name", "hello_world",
+//                "language", Map.of("code", "en")));
+//
+//        try {
+//            ResponseEntity<String> response =
+//                    restTemplate.postForEntity(url, new HttpEntity<>(body, headers), String.class);
+//            System.out.println("WhatsApp response: " + response.getBody());
+//            return response.getBody();
+//        } catch (HttpStatusCodeException e) {
+//            System.out.println("WhatsApp error: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
+//            throw new RuntimeException("WhatsApp failed: " + e.getResponseBodyAsString(), e);
+//        }
+//    }
 }

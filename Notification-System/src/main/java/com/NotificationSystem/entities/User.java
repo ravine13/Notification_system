@@ -2,6 +2,7 @@ package com.NotificationSystem.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnore; // CHANGED: new import, needed for @JsonIgnore below
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -26,7 +27,7 @@ public class User {
     @Column(nullable = false, length = 255)
     private String email;
 
-    @JsonIgnore // stops password from being in json response
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(nullable = false, length = 255)
     private String password;
 
