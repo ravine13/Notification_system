@@ -8,15 +8,14 @@ import {
 } from 'lucide-react'
 
 
-import RoutesZones from './zones/page'
-// import RoutesCollections from './collections/page'
+
+import RoutesZones from '../components/Zones'
 import Collections from '../components/Collections'
-// import RoutesSchedules from './schedule/page'
 import Schedule from '../components/Schedules'
-import RoutesResidents from './resident/page'
-import RoutesNotifications from './notification/page'
+import RoutesResidents from '../components/Resident'
+import RoutesNotifications from '../components/Notifications'
 import Overview from '../components/Overview'
-import RoutesUsers from './user/page'
+import RoutesUsers from '../components/Users'
 
 
 const API_URL = 'http://localhost:9123'
@@ -241,7 +240,9 @@ export default function Page() {
                   choice to show both rather than pick one */}
               {activeNav === 'Collection schedules' && <CollectionSchedulesView />}
 
-              {activeNav === 'Users' && <RoutesUsers />}
+              {activeNav === 'Users' && (
+                  <RoutesUsers role={role} email={userEmail} onNameChange={setUserName} />
+              )}
 
               {activeNav === 'Reports' && (
                   <DataView
@@ -302,9 +303,7 @@ function CollectionSchedulesView() {
   )
 }
 
-/* =========================================================
-   LOGIN SCREEN — real fetch to the backend, original visuals
-   ========================================================= */
+
 function LoginScreen({ onLogin }: { onLogin: (role: Role, email: string, name: string) => void }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
