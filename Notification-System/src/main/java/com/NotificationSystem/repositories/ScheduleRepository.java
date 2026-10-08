@@ -4,6 +4,7 @@ import com.NotificationSystem.entities.Schedule;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Repository
@@ -17,4 +18,6 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
             Long zoneId,
             Schedule.Status status
     );
+
+    List<Schedule> findByTruck_IdAndCollectionDate(Long truckId, LocalDate date);
 }

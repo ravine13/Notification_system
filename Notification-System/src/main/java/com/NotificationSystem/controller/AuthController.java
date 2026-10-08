@@ -84,8 +84,11 @@ public class AuthController {
                 .header("Set-Cookie", cookie.toString())
                 .body(
                         new AuthenticationResponse(
+                                user.getId(),
+                                user.getEmail(),
                                 user.getRole().name(),
                                 user.getName()
+
                         )
                 );
     }
@@ -148,8 +151,11 @@ public class AuthController {
 
         return ResponseEntity.ok(
                 new AuthenticationResponse(
+                        user.getId(),
+                        user.getEmail(),
                         user.getRole().name(),
                         user.getName()
+
                 )
         );
     }

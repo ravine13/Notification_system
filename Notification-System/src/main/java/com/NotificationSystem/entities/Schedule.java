@@ -24,6 +24,10 @@ public class Schedule {
     @JoinColumn(name = "zone_id", nullable = false)
     private Zone zone;
 
+    @ManyToOne
+    @JoinColumn(name = "truck_id")
+    private Truck truck;
+
     @Column(nullable = false)
     private LocalDate collectionDate;
 
@@ -36,6 +40,7 @@ public class Schedule {
 
     @Column(nullable = false)
     private LocalDateTime updatedAt = LocalDateTime.now();
+
 
     public enum Status {
         SCHEDULED,

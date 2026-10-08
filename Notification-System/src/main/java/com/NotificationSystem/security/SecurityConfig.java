@@ -4,6 +4,7 @@ import com.NotificationSystem.service.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -28,7 +29,7 @@ public class SecurityConfig {
     private final CustomUserDetailsService userDetailsService;
     private final JwtRequestFilter jwtRequestFilter;
     private final PasswordEncoder passwordEncoder;
-    private final SecurityContextRepository securityContextRepository;
+//    private final SecurityContextRepository securityContextRepository;
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
@@ -73,11 +74,11 @@ public class SecurityConfig {
                                 SessionCreationPolicy.STATELESS
                         )
                 )
-                .securityContext(context ->
-                        context.securityContextRepository(
-                                securityContextRepository
-                        )
-                )
+//                .securityContext(context ->
+//                        context.securityContextRepository(
+//                                securityContextRepository
+//                        )
+//                )
 
                 .authorizeHttpRequests(auth -> auth
 
@@ -103,6 +104,9 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/whatsapp/**")
                         .permitAll()
+
+                        .requestMatchers(HttpMethod.GET, "/trucks/**").hasAnyRole("ADMIN", "STAFF")
+                        .requestMatchers("/trucks/**").hasRole("ADMIN")
 
                         .anyRequest().authenticated()
                 )

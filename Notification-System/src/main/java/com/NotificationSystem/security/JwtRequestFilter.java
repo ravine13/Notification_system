@@ -53,8 +53,6 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             try {
                 username = jwtUtil.extractUsername(jwt);
             } catch (Exception e) {
-                // Invalid/malformed token.
-                // Continue the request without authenticating the user.
                 username = null;
             }
         }
