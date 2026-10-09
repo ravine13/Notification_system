@@ -16,6 +16,7 @@ import RoutesResidents from '../components/Resident'
 import RoutesNotifications from '../components/Notifications'
 import Overview from '../components/Overview'
 import RoutesUsers from '../components/Users'
+import Reports from '../components/Reports'
 
 
 const API_URL = 'http://localhost:9123'
@@ -59,7 +60,7 @@ export default function Page() {
   const [showSchedule, setShowSchedule] = useState(false)
   const [toast, setToast] = useState<ToastState>(null)
 
-  // ---- data from backend (empty until wired up) ----
+
   const [routes, setRoutes] = useState<RouteRecord[]>([])
 
   function notify(message: string, type: ToastType = 'success') {
@@ -155,17 +156,14 @@ export default function Page() {
   const visibleNav = navItems.filter((item) => !item.adminOnly || isAdmin)
   const title = activeNav === 'Overview' ? (isAdmin ? 'Admin operations overview' : 'Staff operations workspace') : activeNav
 
-  // CHANGED: these views now render their real, self-contained components
-  // directly (same treatment 'Routes & zones' already had), instead of going
-  // through the generic DataView card. Each of these components has its own
-  // header + create button, so wrapping them in DataView's card would have
-  // produced two stacked headers.
+
   const rendersOwnComponent =
       activeNav === 'Routes & zones' ||
       activeNav === 'Residents' ||
       activeNav === 'Notifications' ||
       activeNav === 'Collection schedules' ||
-      activeNav === 'Users'
+      activeNav === 'Users' ||
+      activeNav === 'Reports'
 
   return (
       <div className={dark ? 'dark' : ''}>
@@ -243,16 +241,7 @@ export default function Page() {
               {activeNav === 'Users' && (
                   <RoutesUsers role={role} email={userEmail} onNameChange={setUserName} />
               )}
-
-              {activeNav === 'Reports' && (
-                  <DataView
-                      view={activeNav}
-                      isAdmin={isAdmin}
-                      routes={routes}
-                      onCreate={() => setShowSchedule(true)}
-                      onNotify={notify}
-                  />
-              )}
+              {activeNav === 'Reports' && isAdmin && <Reports />}
             </main>
           </div>
           {showSchedule && (
