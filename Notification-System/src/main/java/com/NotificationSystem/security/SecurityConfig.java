@@ -87,12 +87,21 @@ public class SecurityConfig {
                                 "/api/auth/authenticate",
                                 "/api/auth/register",
                                 "/test/**",
-                                "/webhook/**"
+                                "/webhook/**",
+                                "/error"
+
                         ).permitAll()
+
 
                         // Admin endpoints
                         .requestMatchers("/admin/**")
                         .hasRole("ADMIN")
+
+                        .requestMatchers("/reports/**")
+                        .hasRole("ADMIN")
+
+
+
 
                         // Staff endpoints
                         .requestMatchers("/staff/**")

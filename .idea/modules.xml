@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/Notification System.iml" filepath="$PROJECT_DIR$/.idea/Notification System.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Notification-System/Notification-System.iml" filepath="$PROJECT_DIR$/Notification-System/Notification-System.iml" />
     </modules>
   </component>
 </project>
