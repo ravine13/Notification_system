@@ -14,7 +14,9 @@ import org.springframework.beans.factory.annotation.Value;
 
 
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -34,19 +36,25 @@ public class NotificationDispatchService {
     @Autowired
     private WhatsAppService whatsAppService;
 
-    public int queueZoneNotifications(Long scheduleId, Notification.Channel channel) {
+    public Map<String, Object> queueZoneNotifications(Long scheduleId, Notification.Channel channel) {
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new RuntimeException("Schedule not found"));
 
         List<Resident> residents = residentRepository.findByZone_Id(schedule.getZone().getId());
-
         List<Notification> existing = notificationRepository.findBySchedule_Id(scheduleId);
         Set<Long> alreadyNotified = existing.stream()
                 .map(n -> n.getResident().getId())
                 .collect(Collectors.toSet());
 
         List<Resident> toNotify = residents.stream()
-                .filter(r -> !alreadyNotified.contains(r.getId()))
+                .filter(r -> {
+                    boolean duplicate = alreadyNotified.contains(r.getId());
+                    if (duplicate) {
+                        System.out.println("Duplicate prevented: schedule "
+                                + scheduleId + ", resident " + r.getId());
+                    }
+                    return !duplicate;
+                })
                 .toList();
 
         String messageText = "Waste collection in your zone is scheduled for "
@@ -71,7 +79,16 @@ public class NotificationDispatchService {
 
         dispatchAsync(saved);
 
-        return saved.size();
+        int duplicatesPrevented = residents.size() - toNotify.size();
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("queued", saved.size());
+        result.put("duplicatesPrevented", duplicatesPrevented);
+        result.put("message", duplicatesPrevented > 0
+                ? "Duplicate prevented: " + duplicatesPrevented
+                + " resident(s) already notified for this schedule"
+                : "All residents queued");
+        return result;
     }
 
     @Async

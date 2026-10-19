@@ -82,43 +82,40 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
-                        // Public authentication endpoints
-                        .requestMatchers(
-                                "/api/auth/authenticate",
-                                "/api/auth/register",
-                                "/test/**",
-                                "/webhook/**",
-                                "/error"
+                                // Public endpoints (register is no longer public)
+                                .requestMatchers(
+                                        "/api/auth/authenticate",
+                                        "/test/**",
+                                        "/webhook/**",
+                                        "/error"
+                                ).permitAll()
 
-                        ).permitAll()
+                                // Only admins can create new accounts
+                                .requestMatchers("/api/auth/register").hasRole("ADMIN")
+
+                                // Admin endpoints
+                                .requestMatchers("/admin/**").hasRole("ADMIN")
+                                .requestMatchers("/reports/**").hasRole("ADMIN")
+
+                                // Staff endpoints
+                                .requestMatchers("/staff/**").hasRole("STAFF")
+
+                                // Zones: admin and staff can view, only admins can change
+                                .requestMatchers(HttpMethod.GET, "/zones/**").hasAnyRole("ADMIN", "STAFF")
+                                .requestMatchers("/zones/**").hasRole("ADMIN")
+
+                                // Residents: staff can view, add and edit, only admins can delete
+                                .requestMatchers(HttpMethod.DELETE, "/residents/**").hasRole("ADMIN")
 
 
-                        // Admin endpoints
-                        .requestMatchers("/admin/**")
-                        .hasRole("ADMIN")
+                                .requestMatchers("/api/sms/**").hasRole("ADMIN")
+                                .requestMatchers("/api/whatsapp/**").hasRole("ADMIN")
 
-                        .requestMatchers("/reports/**")
-                        .hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/trucks/**").hasAnyRole("ADMIN", "STAFF")
+                                .requestMatchers("/trucks/**").hasRole("ADMIN")
 
-
-
-
-                        // Staff endpoints
-                        .requestMatchers("/staff/**")
-                        .hasRole("STAFF")
-
-                        // Currently public endpoints
-                        .requestMatchers("/api/sms/**")
-                        .permitAll()
-
-                        .requestMatchers("/api/whatsapp/**")
-                        .permitAll()
-
-                        .requestMatchers(HttpMethod.GET, "/trucks/**").hasAnyRole("ADMIN", "STAFF")
-                        .requestMatchers("/trucks/**").hasRole("ADMIN")
-
-                        .anyRequest().authenticated()
-                )
+                                .anyRequest().authenticated()
+                        )
 
                 .addFilterBefore(
                         jwtRequestFilter,

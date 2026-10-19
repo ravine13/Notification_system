@@ -114,31 +114,4 @@ public class WhatsAppService {
 
         }
     }
-
-//
-//    public String sendHelloWorld(String phoneNumber) {
-//        String url = "https://graph.facebook.com/" + apiVersion + "/" + phoneNumberId + "/messages";
-//
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.setContentType(MediaType.APPLICATION_JSON);
-//        headers.setBearerAuth(accessToken);
-//
-//        Map<String, Object> body = new HashMap<>();
-//        body.put("messaging_product", "whatsapp");
-//        body.put("to", phoneNumber.replaceAll("[^0-9]", ""));
-//        body.put("type", "template");
-//        body.put("template", Map.of(
-//                "name", "hello_world",
-//                "language", Map.of("code", "en")));
-//
-//        try {
-//            ResponseEntity<String> response =
-//                    restTemplate.postForEntity(url, new HttpEntity<>(body, headers), String.class);
-//            System.out.println("WhatsApp response: " + response.getBody());
-//            return response.getBody();
-//        } catch (HttpStatusCodeException e) {
-//            System.out.println("WhatsApp error: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
-//            throw new RuntimeException("WhatsApp failed: " + e.getResponseBodyAsString(), e);
-//        }
-//    }
 }

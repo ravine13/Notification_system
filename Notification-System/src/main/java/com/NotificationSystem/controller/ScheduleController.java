@@ -7,6 +7,7 @@ import com.NotificationSystem.service.ScheduleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Map;
@@ -94,8 +95,21 @@ public class ScheduleController {
             @PathVariable Long id,
             @RequestParam("channel") Notification.Channel channel) {
 
-        int queued = notificationDispatchService.queueZoneNotifications(id, channel);
-        return ResponseEntity.ok(Map.of("queued", queued));
+        Map<String, Object> result = notificationDispatchService.queueZoneNotifications(id, channel);
+        return ResponseEntity.ok(result);
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<Map<String, Object>> handleStatusException(
+            ResponseStatusException ex) {
+
+        return ResponseEntity
+                .status(ex.getStatusCode())
+                .body(Map.of(
+                        "status", ex.getStatusCode().value(),
+                        "error", "Conflict",
+                        "message", ex.getReason()
+                ));
     }
 }
 

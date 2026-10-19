@@ -5,6 +5,7 @@ import com.NotificationSystem.service.ResidentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 import java.util.Optional;
@@ -40,7 +41,7 @@ public class ResidentController {
 
     @PostMapping
     public ResponseEntity<Resident> createResident(
-            @RequestBody Resident resident) {
+            @Valid @RequestBody Resident resident) {
 
         Resident saved = residentService.saveResident(resident);
         return ResponseEntity.ok(saved);
@@ -49,7 +50,7 @@ public class ResidentController {
     @PutMapping("/{id}")
     public ResponseEntity<Resident> updateResident(
             @PathVariable Long id,
-            @RequestBody Resident updatedResident) {
+            @Valid @RequestBody Resident updatedResident) {
 
         Optional<Resident> existing =
                 residentService.getResidentById(id);
