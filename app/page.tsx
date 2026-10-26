@@ -2,12 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import {
-  Bell, CalendarDays, Check, FileText, Home,
+  ArrowLeft, Bell, CalendarDays, Check, FileText, Home,
   Loader2, LogIn, LogOut, Map, Menu, Moon, Plus,
-  Recycle, Search, ShieldCheck, Sun,UserCog, Users, X,
+  Recycle, Search, Sun, Truck, UserCog, Users, X,
 } from 'lucide-react'
-
-
 
 import RoutesZones from '../components/Zones'
 import Collections from '../components/Collections'
@@ -17,12 +15,20 @@ import RoutesNotifications from '../components/Notifications'
 import Overview from '../components/Overview'
 import RoutesUsers from '../components/Users'
 import Reports from '../components/Reports'
-
+import Trucks from '../components/Trucks'
 
 const API_URL = 'http://localhost:9123'
 
 type Role = 'admin' | 'staff'
-type View = 'Overview' | 'Collection schedules' | 'Routes & zones' | 'Residents' | 'Notifications' | 'Reports' | 'Users'
+type View =
+    | 'Overview'
+    | 'Collection schedules'
+    | 'Routes & zones'
+    | 'Trucks'
+    | 'Residents'
+    | 'Notifications'
+    | 'Reports'
+    | 'Users'
 
 type RouteRecord = {
   id: number | string
@@ -39,10 +45,11 @@ const navItems: { label: View; icon: typeof Home; adminOnly?: boolean }[] = [
   { label: 'Overview', icon: Home },
   { label: 'Collection schedules', icon: CalendarDays },
   { label: 'Routes & zones', icon: Map },
+  { label: 'Trucks', icon: Truck },
   { label: 'Residents', icon: Users },
   { label: 'Notifications', icon: Bell, adminOnly: true },
   { label: 'Reports', icon: FileText, adminOnly: true },
-  {label: 'Users',icon: UserCog},
+  { label: 'Users', icon: UserCog },
 ]
 
 export default function Page() {
@@ -60,7 +67,6 @@ export default function Page() {
   const [showSchedule, setShowSchedule] = useState(false)
   const [toast, setToast] = useState<ToastState>(null)
 
-
   const [routes, setRoutes] = useState<RouteRecord[]>([])
 
   function notify(message: string, type: ToastType = 'success') {
@@ -75,12 +81,10 @@ export default function Page() {
           method: 'GET',
           credentials: 'include',
         })
-
         if (!response.ok) {
           setAuthenticated(false)
           return
         }
-
         const data = await response.json()
         const backendRole = String(data.role).toLowerCase()
 
@@ -88,7 +92,6 @@ export default function Page() {
           setAuthenticated(false)
           return
         }
-
         setRole(backendRole as Role)
         setUserName(data.name || '')
         setUserEmail(data.email || '')
@@ -100,10 +103,8 @@ export default function Page() {
         setAuthChecking(false)
       }
     }
-
     checkAuthentication()
   }, [])
-
   async function logout() {
     try {
       await fetch(`${API_URL}/api/auth/logout`, { method: 'POST', credentials: 'include' })
@@ -124,9 +125,11 @@ export default function Page() {
       ? userName.trim().split(/\s+/).map((p) => p[0]).join('').slice(0, 2).toUpperCase()
       : 'U'
   const firstName = userName ? userName.trim().split(/\s+/)[0] : 'there'
-  const today = new Date().toLocaleDateString('en-KE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+  const today = new Date().toLocaleDateString('en-KE', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+  })
 
-  // ---- checking session ----
+
   if (authChecking) {
     return (
         <div className="flex min-h-screen items-center justify-center bg-[#173a2e]">
@@ -138,7 +141,6 @@ export default function Page() {
     )
   }
 
-  // ---- landing page: always the login screen when not authenticated ----
   if (!authenticated) {
     return (
         <LoginScreen
@@ -154,11 +156,15 @@ export default function Page() {
 
   const isAdmin = role === 'admin'
   const visibleNav = navItems.filter((item) => !item.adminOnly || isAdmin)
-  const title = activeNav === 'Overview' ? (isAdmin ? 'Admin operations overview' : 'Staff operations workspace') : activeNav
+  const title =
+      activeNav === 'Overview'
+          ? isAdmin ? 'Admin operations overview' : 'Staff operations workspace'
+          : activeNav
 
 
   const rendersOwnComponent =
       activeNav === 'Routes & zones' ||
+      activeNav === 'Trucks' ||
       activeNav === 'Residents' ||
       activeNav === 'Notifications' ||
       activeNav === 'Collection schedules' ||
@@ -171,13 +177,22 @@ export default function Page() {
           <aside className={`fixed inset-y-0 left-0 z-40 flex w-[272px] flex-col bg-[#173a2e] px-5 py-6 text-white transition-transform lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
             <div className="flex items-center gap-3 px-2">
               <div className="flex size-10 items-center justify-center rounded-xl bg-[#d8ed65] text-[#173a2e]"><Recycle size={23} /></div>
-              <div><p className="text-lg font-semibold">Waste Track</p><p className="text-[11px] uppercase tracking-[0.2em] text-[#b6cbbd]">Kenya · Eldoret</p></div>
+              <div>
+                <p className="text-lg font-semibold">Waste Track</p>
+                <p className="text-[11px] uppercase tracking-[0.2em] text-[#b6cbbd]">Kenya · Eldoret</p>
+              </div>
               <button className="ml-auto lg:hidden" onClick={() => setSidebarOpen(false)} aria-label="Close navigation"><X /></button>
             </div>
-            <div className="mt-11 px-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#8da99a]">{isAdmin ? 'Administrator' : 'Staff workspace'}</div>
+            <div className="mt-11 px-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#8da99a]">
+              {isAdmin ? 'Administrator' : 'Staff workspace'}
+            </div>
             <nav className="mt-3 flex flex-col gap-1" aria-label="Main navigation">
               {visibleNav.map(({ label, icon: Icon }) => (
-                  <button key={label} onClick={() => { setActiveNav(label); setSidebarOpen(false) }} className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm transition ${activeNav === label ? 'bg-[#d8ed65] font-semibold text-[#173a2e]' : 'text-[#c1d2c7] hover:bg-white/10 hover:text-white'}`}>
+                  <button
+                      key={label}
+                      onClick={() => { setActiveNav(label); setSidebarOpen(false) }}
+                      className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm transition ${activeNav === label ? 'bg-[#d8ed65] font-semibold text-[#173a2e]' : 'text-[#c1d2c7] hover:bg-white/10 hover:text-white'}`}
+                  >
                     <Icon size={18} /><span>{label === 'Users' && !isAdmin ? 'My Profile' : label}</span>
                   </button>
               ))}
@@ -186,34 +201,54 @@ export default function Page() {
               <button onClick={() => setDark(!dark)} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm text-[#c1d2c7] hover:bg-white/10">
                 {dark ? <Sun size={18} /> : <Moon size={18} />}{dark ? 'Light mode' : 'Dark mode'}
               </button>
-              <button onClick={logout} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm text-[#c1d2c7] hover:bg-white/10"><LogOut size={18} />Sign out</button>
+              <button onClick={logout} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm text-[#c1d2c7] hover:bg-white/10">
+                <LogOut size={18} />Sign out
+              </button>
               <div className="mt-4 flex items-center gap-3 rounded-xl bg-white/10 p-3">
                 <div className="flex size-9 items-center justify-center rounded-full bg-[#f5ad62] text-sm font-bold text-[#173a2e]">{displayInitials}</div>
-                <div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{userName || 'User'}</p><p className="truncate text-xs text-[#9eb7a9]">{isAdmin ? 'System administrator' : 'Collection staff'}</p></div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">{userName || 'User'}</p>
+                  <p className="truncate text-xs text-[#9eb7a9]">{isAdmin ? 'System administrator' : 'Collection staff'}</p>
+                </div>
               </div>
             </div>
           </aside>
           {sidebarOpen && <button aria-label="Close navigation overlay" className="fixed inset-0 z-30 bg-black/40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
+
           <div className="lg:pl-[272px]">
             <header className="flex h-[76px] items-center justify-between border-b bg-card px-5 sm:px-8">
               <div className="flex items-center gap-3">
                 <button className="rounded-lg p-2 lg:hidden" onClick={() => setSidebarOpen(true)} aria-label="Open navigation"><Menu /></button>
-                <div><p className="text-xs font-medium text-muted-foreground">{today}</p><h1 className="text-xl font-semibold tracking-tight sm:text-2xl">Good morning, {firstName} <span className="text-[#e1a65c]">.</span></h1></div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">{today}</p>
+                  <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
+                    Good morning, {firstName} <span className="text-[#e1a65c]">.</span>
+                  </h1>
+                </div>
               </div>
               <div className="flex items-center gap-3">
                 <button className="hidden items-center gap-2 rounded-xl border bg-background px-3 py-2 text-sm text-muted-foreground sm:flex"><Search size={16} />Search</button>
-                <button className="relative rounded-xl border bg-background p-2.5 text-muted-foreground" aria-label="Notifications"><Bell size={18} /><span className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-destructive" /></button>
+                <button className="relative rounded-xl border bg-background p-2.5 text-muted-foreground" aria-label="Notifications">
+                  <Bell size={18} /><span className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-destructive" />
+                </button>
                 <div className="hidden size-9 items-center justify-center rounded-full bg-[#d8ed65] text-xs font-bold text-[#173a2e] sm:flex">{displayInitials}</div>
               </div>
             </header>
+
             <main className="mx-auto max-w-[1500px] p-5 sm:p-8">
-              {/* CHANGED: header row (title + "Create schedule" button) now only
-                  shows on Overview, since the other views render their own
-                  component with its own header + create button */}
               {!rendersOwnComponent && (
                   <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-                    <div><p className="mb-1 text-sm font-medium text-muted-foreground">{isAdmin ? 'Full system access' : 'Read routes and schedules · update field status'}</p><h2 className="text-2xl font-semibold tracking-tight">{title}</h2></div>
-                    {isAdmin && activeNav === 'Overview' && <button onClick={() => setShowSchedule(true)} className="flex w-fit items-center gap-2 rounded-xl bg-[#173a2e] px-4 py-3 text-sm font-semibold text-white shadow-lg"><Plus size={17} />Create schedule</button>}
+                    <div>
+                      <p className="mb-1 text-sm font-medium text-muted-foreground">
+                        {isAdmin ? 'Full system access' : 'Read routes and schedules · update field status'}
+                      </p>
+                      <h2 className="text-2xl font-semibold tracking-tight">{title}</h2>
+                    </div>
+                    {isAdmin && activeNav === 'Overview' && (
+                        <button onClick={() => setShowSchedule(true)} className="flex w-fit items-center gap-2 rounded-xl bg-[#173a2e] px-4 py-3 text-sm font-semibold text-white shadow-lg">
+                          <Plus size={17} />Create schedule
+                        </button>
+                    )}
                   </div>
               )}
 
@@ -226,24 +261,22 @@ export default function Page() {
 
               {activeNav === 'Routes & zones' && <RoutesZones />}
 
-              {/* CHANGED: Residents and Notifications now render their real
-                  components directly instead of falling through to DataView's
-                  generic "No data available yet" placeholder */}
+              {activeNav === 'Trucks' && <Trucks isAdmin={isAdmin} />}
+
               {activeNav === 'Residents' && <RoutesResidents />}
 
               {activeNav === 'Notifications' && isAdmin && <RoutesNotifications />}
 
-              {/* CHANGED: "Collection schedules" now renders a sub-tab switcher
-                  between the Schedules entity and the Collection entity, per your
-                  choice to show both rather than pick one */}
               {activeNav === 'Collection schedules' && <CollectionSchedulesView />}
 
               {activeNav === 'Users' && (
                   <RoutesUsers role={role} email={userEmail} onNameChange={setUserName} />
               )}
+
               {activeNav === 'Reports' && isAdmin && <Reports />}
             </main>
           </div>
+
           {showSchedule && (
               <ScheduleModal
                   routes={routes}
@@ -262,11 +295,7 @@ export default function Page() {
   )
 }
 
-/* =========================================================
-   COLLECTION SCHEDULES — sub-tab switcher between the Schedules
-   entity (zone/date/status) and the Collection entity (per-resident
-   pickup record).
-   ========================================================= */
+
 function CollectionSchedulesView() {
   const [subTab, setSubTab] = useState<'schedules' | 'collections'>('schedules')
 
@@ -287,22 +316,31 @@ function CollectionSchedulesView() {
           </button>
         </div>
 
-        {subTab === 'schedules' ? < Schedule /> : <Collections />}
+        {subTab === 'schedules' ? <Schedule /> : <Collections />}
       </div>
   )
 }
-
-
 function LoginScreen({ onLogin }: { onLogin: (role: Role, email: string, name: string) => void }) {
+  const [mode, setMode] = useState<'login' | 'forgot'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
+
+  // Shows the success banner after a reset redirects back to "/?reset=1"
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('reset') === '1') {
+      setNotice('Password updated. Please sign in with your new password.')
+      window.history.replaceState({}, '', '/')
+    }
+  }, [])
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setError('')
+    setNotice('')
     try {
       const response = await fetch(`${API_URL}/api/auth/authenticate`, {
         method: 'POST',
@@ -320,7 +358,7 @@ function LoginScreen({ onLogin }: { onLogin: (role: Role, email: string, name: s
       const backendRole = String(data.role).toLowerCase()
       if (backendRole !== 'admin' && backendRole !== 'staff') throw new Error('Invalid user role')
 
-      onLogin(backendRole as Role, email, data.name || '')
+      onLogin(backendRole as Role, data.email || email, data.name || '')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed')
     } finally {
@@ -335,93 +373,142 @@ function LoginScreen({ onLogin }: { onLogin: (role: Role, email: string, name: s
         <div className="relative grid w-full max-w-5xl overflow-hidden rounded-3xl bg-[#fbfcf9] shadow-2xl lg:grid-cols-[1fr_0.9fr]">
           <div className="hidden flex-col justify-between bg-[#d8ed65] p-10 text-[#173a2e] lg:flex">
             <div>
-              <div className="flex items-center gap-3"><div className="flex size-11 items-center justify-center rounded-xl bg-[#173a2e] text-[#d8ed65]"><Recycle /></div><span className="text-xl font-semibold">Waste Track</span></div>
+              <div className="flex items-center gap-3">
+                <div className="flex size-11 items-center justify-center rounded-xl bg-[#173a2e] text-[#d8ed65]"><Recycle /></div>
+                <span className="text-xl font-semibold">Waste Track</span>
+              </div>
               <h1 className="mt-20 max-w-sm text-5xl font-semibold leading-[1.05] tracking-tight">Cleaner routes. Stronger communities.</h1>
               <p className="mt-6 max-w-sm text-sm leading-6 text-[#3c5b40]">A single workspace for Eldoret administrators and collection teams.</p>
             </div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em]">Waste Track Kenya · 2026</p>
           </div>
-          <form onSubmit={submit} className="p-7 sm:p-12">
-            <div className="flex size-11 items-center justify-center rounded-xl bg-[#173a2e] text-[#d8ed65] lg:hidden"><Recycle /></div>
-            <p className="mt-8 text-sm font-medium text-[#789086]">Welcome back</p>
-            <h2 className="mt-1 text-3xl font-semibold text-[#19332a]">Sign in to Waste Track</h2>
-            <p className="mt-3 text-sm text-[#789086]">Enter your credentials to continue.</p>
 
-            {error && (
-                <div className="mt-5 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                  <X size={15} />{error}
+          {mode === 'login' ? (
+              <form onSubmit={submit} className="p-7 sm:p-12">
+                <div className="flex size-11 items-center justify-center rounded-xl bg-[#173a2e] text-[#d8ed65] lg:hidden"><Recycle /></div>
+                <p className="mt-8 text-sm font-medium text-[#789086]">Welcome back</p>
+                <h2 className="mt-1 text-3xl font-semibold text-[#19332a]">Sign in to Waste Track</h2>
+                <p className="mt-3 text-sm text-[#789086]">Enter your credentials to continue.</p>
+
+                {notice && (
+                    <div className="mt-5 flex items-center gap-2 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+                      <Check size={15} />{notice}
+                    </div>
+                )}
+                {error && (
+                    <div className="mt-5 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                      <X size={15} />{error}
+                    </div>
+                )}
+
+                <label className="mt-8 block text-sm font-semibold text-[#19332a]">
+                  Email address
+                  <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@wastetrack.ke" className="mt-2 w-full rounded-xl border border-[#dfe6dc] bg-white px-4 py-3 outline-none focus:border-[#6b9d72]" />
+                </label>
+                <label className="mt-4 block text-sm font-semibold text-[#19332a]">
+                  Password
+                  <input required type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="mt-2 w-full rounded-xl border border-[#dfe6dc] bg-white px-4 py-3 outline-none focus:border-[#6b9d72]" />
+                </label>
+
+                <div className="mt-2 flex justify-end">
+                  <button
+                      type="button"
+                      onClick={() => { setError(''); setNotice(''); setMode('forgot') }}
+                      style={{ color: '#245843' }}
+                      className="text-xs font-semibold hover:underline"
+                  >
+                    Forgot password?
+                  </button>
                 </div>
-            )}
 
-            <label className="mt-8 block text-sm font-semibold text-[#19332a]">
-              Email address
-              <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@wastetrack.ke" className="mt-2 w-full rounded-xl border border-[#dfe6dc] bg-white px-4 py-3 outline-none focus:border-[#6b9d72]" />
-            </label>
-            <label className="mt-4 block text-sm font-semibold text-[#19332a]">
-              Password
-              <input required type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="mt-2 w-full rounded-xl border border-[#dfe6dc] bg-white px-4 py-3 outline-none focus:border-[#6b9d72]" />
-            </label>
-
-            <button disabled={loading} className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[#173a2e] px-4 py-3.5 font-semibold text-white transition hover:bg-[#245843] disabled:opacity-70">
-              {loading ? 'Signing in…' : 'Sign in'}<LogIn size={17} />
-            </button>
-            <p className="mt-5 text-center text-xs text-[#9aaa9f]">Waste Track Kenya Inc</p>
-          </form>
+                <button disabled={loading} className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[#173a2e] px-4 py-3.5 font-semibold text-white transition hover:bg-[#245843] disabled:opacity-70">
+                  {loading ? 'Signing in…' : 'Sign in'}<LogIn size={17} />
+                </button>
+                <p className="mt-5 text-center text-xs text-[#9aaa9f]">Waste Track Kenya Inc</p>
+              </form>
+          ) : (
+              <ForgotPasswordForm initialEmail={email} onBack={() => setMode('login')} />
+          )}
         </div>
       </main>
   )
 }
 
-function EmptyState({ icon: Icon, title, subtitle, compact }: { icon: typeof Map; title: string; subtitle: string; compact?: boolean }) {
-  return (
-      <div className={compact ? 'text-center' : 'w-full rounded-xl bg-muted/60 p-8 text-center'}>
-        <Icon className="mx-auto text-muted-foreground" size={compact ? 22 : 26} />
-        <p className="mt-3 text-sm font-semibold">{title}</p>
-        <p className="mt-1 text-xs text-muted-foreground">{subtitle}</p>
-      </div>
-  )
-}
+function ForgotPasswordForm({ initialEmail, onBack }: { initialEmail: string; onBack: () => void }) {
+  const [email, setEmail] = useState(initialEmail)
+  const [loading, setLoading] = useState(false)
+  const [sent, setSent] = useState(false)
 
-
-function DataView({ view, isAdmin }: { view: View; isAdmin: boolean; routes: RouteRecord[]; onCreate: () => void; onNotify: (m: string, t?: ToastType) => void }) {
-  const adminOnly = view === 'Notifications' || view === 'Reports'
-
-  const descriptions: Record<View, string> = {
-    Overview: '',
-    'Collection schedules': 'Create and manage waste collection schedules.',
-    'Routes & zones': 'Manage collection routes and zones.',
-    Residents: 'Manage resident records and service requests.',
-    Notifications: 'View and manage waste collection notifications.',
-    Reports: 'View waste management reports and statistics.',
-    Users: '',
+  async function submit(e: React.FormEvent) {
+    e.preventDefault()
+    setLoading(true)
+    try {
+      await fetch(`${API_URL}/api/auth/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+    } catch (err) {
+      console.error('Forgot password request failed:', err)
+    } finally {
+      setLoading(false)
+      setSent(true) // same message whether or not the email exists
+    }
   }
 
   return (
-      <div className="rounded-2xl border bg-card shadow-sm">
-        <div className="flex flex-col justify-between gap-3 border-b p-5 sm:flex-row sm:items-center">
-          <div><h3 className="font-semibold">{view}</h3><p className="mt-1 text-xs text-muted-foreground">{descriptions[view]}</p></div>
-        </div>
+      <div className="p-7 sm:p-12">
+        <div className="flex size-11 items-center justify-center rounded-xl bg-[#173a2e] text-[#d8ed65] lg:hidden"><Recycle /></div>
+        <p className="mt-8 text-sm font-medium text-[#789086]">Account recovery</p>
+        <h2 className="mt-1 text-3xl font-semibold text-[#19332a]">Forgot your password?</h2>
 
-        {adminOnly && !isAdmin ? (
-            <div className="p-10 text-center"><ShieldCheck className="mx-auto text-muted-foreground" /><p className="mt-3 font-semibold">Administrator access required</p></div>
+        {sent ? (
+            <div className="mt-6 flex items-start gap-2 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+              <Check size={15} className="mt-0.5 shrink-0" />
+              <span>reset link has been sent. It expires in 30 minutes.</span>
+            </div>
         ) : (
-            <div className="p-10"><EmptyState icon={FileText} title="No data available yet" subtitle="This section will be connected to the database and backend API." /></div>
+            <form onSubmit={submit}>
+              <p className="mt-3 text-sm text-[#789086]">Enter your email and we will send you a reset link.</p>
+              <label className="mt-8 block text-sm font-semibold text-[#19332a]">
+                Email address
+                <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@wastetrack.ke" className="mt-2 w-full rounded-xl border border-[#dfe6dc] bg-white px-4 py-3 outline-none focus:border-[#6b9d72]" />
+              </label>
+              <button disabled={loading} className="mt-6 w-full rounded-xl bg-[#173a2e] px-4 py-3.5 font-semibold text-white transition hover:bg-[#245843] disabled:opacity-70">
+                {loading ? 'Sending…' : 'Send reset link'}
+              </button>
+            </form>
         )}
+
+          <button
+              type="button"
+              onClick={onBack}
+              style={{
+                  color: '#245843',
+                  borderColor: '#dfe6dc',
+                  backgroundColor: '#ffffff',
+                  opacity: 1,
+              }}
+              className="mt-6 flex w-full items-center justify-center gap-2
+    rounded-xl border px-4 py-3 text-sm font-semibold
+    transition hover:bg-[#f1f5ee]"
+          >
+              <ArrowLeft size={16} color="#245843" />
+              <span style={{ color: '#245843', opacity: 1 }}>
+    Back to sign in
+  </span>
+          </button>
       </div>
   )
 }
 
-/* =========================================================
-   SCHEDULE MODAL
-   ========================================================= */
+
 function ScheduleModal({ routes, onClose, onPublish }: { routes: RouteRecord[]; onClose: () => void; onPublish: () => void }) {
   const [routeId, setRouteId] = useState('')
   const [date, setDate] = useState('')
 
   function submit(e: React.FormEvent) {
     e.preventDefault()
-    // Schedules-creation endpoint isn't wired up yet — hook a POST to
-    // `${API_URL}/api/schedules` here once the backend route exists.
     onPublish()
   }
 
@@ -429,7 +516,10 @@ function ScheduleModal({ routes, onClose, onPublish }: { routes: RouteRecord[]; 
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
         <form onSubmit={submit} role="dialog" aria-modal="true" className="w-full max-w-md rounded-2xl bg-card p-6 shadow-2xl">
           <div className="flex items-start justify-between">
-            <div><h2 className="text-lg font-semibold">Create collection schedule</h2><p className="mt-1 text-sm text-muted-foreground">Publish a route and notify residents.</p></div>
+            <div>
+              <h2 className="text-lg font-semibold">Create collection schedule</h2>
+              <p className="mt-1 text-sm text-muted-foreground">Publish a route and notify residents.</p>
+            </div>
             <button type="button" onClick={onClose} aria-label="Close dialog"><X /></button>
           </div>
           <div className="mt-5 flex flex-col gap-4">
