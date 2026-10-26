@@ -113,7 +113,14 @@ public class SecurityConfig {
 
                                 .requestMatchers(HttpMethod.GET, "/trucks/**").hasAnyRole("ADMIN", "STAFF")
                                 .requestMatchers("/trucks/**").hasRole("ADMIN")
-
+                                .requestMatchers(
+                                        "/api/auth/authenticate",
+                                        "/api/auth/forgot-password",
+                                        "/api/auth/reset-password",
+                                        "/test/**",
+                                        "/webhook/**",
+                                        "/error"
+                                ).permitAll()
                                 .anyRequest().authenticated()
                         )
 

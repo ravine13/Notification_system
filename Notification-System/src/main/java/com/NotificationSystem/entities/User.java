@@ -1,7 +1,6 @@
 package com.NotificationSystem.entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnore; // CHANGED: new import, needed for @JsonIgnore below
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
@@ -33,6 +32,7 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, updatable = false)
+    @Builder.Default
     private Role role = Role.STAFF;
 
     @Column(nullable = false, updatable = false)
