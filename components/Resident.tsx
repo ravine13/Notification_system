@@ -6,7 +6,8 @@ import {
     Map as MapIcon, AlertCircle, UserPlus, MapPinned, UserCheck,
 } from 'lucide-react'
 
-const API_URL = 'http://localhost:9123'
+// const API_URL = 'http://localhost:9123'
+const API_URL = 'https://notification-system-tman.onrender.com'
 
 type Resident = {
     id: number

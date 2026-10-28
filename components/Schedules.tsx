@@ -7,7 +7,8 @@ import {
     AlertCircle, CalendarCheck,
 } from 'lucide-react'
 
-const API_URL = 'http://localhost:9123'
+// const API_URL = 'http://localhost:9123'
+const API_URL = 'https://notification-system-tman.onrender.com'
 
 type Status = 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
 type Filter = 'ALL' | Status

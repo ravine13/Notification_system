@@ -10,12 +10,10 @@ import {
     CheckCircle2, Send, PackageCheck, MapPinned, Truck as TruckIcon, Map as MapIcon,
 } from 'lucide-react'
 
-const API_URL = 'http://localhost:9123'
+// const API_URL = 'http://localhost:9123'
+const API_URL = 'https://notification-system-tman.onrender.com'
 
-/* ------------------------------------------------------------------
-   Types: these mirror the DTOs in ReportDtos.java.
-   Rates are fractions (0.7 = 70%) or null when there is nothing to divide.
-   ------------------------------------------------------------------ */
+
 type Summary = {
     range: { from: string; to: string }
     schedules: {

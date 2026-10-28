@@ -6,7 +6,8 @@ import {
     User as UserIcon, ShieldCheck, Shield, Users as UsersIcon, UserPlus, AlertCircle,
 } from 'lucide-react'
 
-const API_URL = 'http://localhost:9123'
+// const API_URL = 'http://localhost:9123'
+const API_URL = 'https://notification-system-tman.onrender.com'
 
 type Role = 'ADMIN' | 'STAFF'
 type Filter = 'ALL' | Role

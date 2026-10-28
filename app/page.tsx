@@ -17,7 +17,8 @@ import RoutesUsers from '../components/Users'
 import Reports from '../components/Reports'
 import Trucks from '../components/Trucks'
 
-const API_URL = 'http://localhost:9123'
+// const API_URL = 'http://localhost:9123'
+const API_URL = 'https://notification-system-tman.onrender.com'
 
 type Role = 'admin' | 'staff'
 type View =
@@ -72,6 +73,32 @@ export default function Page() {
   function notify(message: string, type: ToastType = 'success') {
     setToast({ message, type })
     window.setTimeout(() => setToast(null), 2600)
+  }
+
+  // ---- theme: load saved choice (or OS preference) and apply it to <html> ----
+  useEffect(() => {
+    let saved: string | null = null
+    try {
+      saved = localStorage.getItem('theme')
+    } catch {
+      // storage unavailable; fall back to OS preference
+    }
+    const isDark = saved
+        ? saved === 'dark'
+        : window.matchMedia('(prefers-color-scheme: dark)').matches
+    setDark(isDark)
+    document.documentElement.classList.toggle('dark', isDark)
+  }, [])
+
+  function toggleTheme() {
+    const next = !dark
+    setDark(next)
+    document.documentElement.classList.toggle('dark', next)
+    try {
+      localStorage.setItem('theme', next ? 'dark' : 'light')
+    } catch {
+      // ignore storage errors
+    }
   }
 
   useEffect(() => {
@@ -172,7 +199,7 @@ export default function Page() {
       activeNav === 'Reports'
 
   return (
-      <div className={dark ? 'dark' : ''}>
+      <div>
         <div className="min-h-screen bg-background text-foreground transition-colors">
           <aside className={`fixed inset-y-0 left-0 z-40 flex w-[272px] flex-col bg-[#173a2e] px-5 py-6 text-white transition-transform lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
             <div className="flex items-center gap-3 px-2">
@@ -198,7 +225,7 @@ export default function Page() {
               ))}
             </nav>
             <div className="mt-auto flex flex-col gap-1 border-t border-white/10 pt-5">
-              <button onClick={() => setDark(!dark)} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm text-[#c1d2c7] hover:bg-white/10">
+              <button onClick={toggleTheme} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm text-[#c1d2c7] hover:bg-white/10">
                 {dark ? <Sun size={18} /> : <Moon size={18} />}{dark ? 'Light mode' : 'Dark mode'}
               </button>
               <button onClick={logout} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm text-[#c1d2c7] hover:bg-white/10">
@@ -480,24 +507,24 @@ function ForgotPasswordForm({ initialEmail, onBack }: { initialEmail: string; on
             </form>
         )}
 
-          <button
-              type="button"
-              onClick={onBack}
-              style={{
-                  color: '#245843',
-                  borderColor: '#dfe6dc',
-                  backgroundColor: '#ffffff',
-                  opacity: 1,
-              }}
-              className="mt-6 flex w-full items-center justify-center gap-2
+        <button
+            type="button"
+            onClick={onBack}
+            style={{
+              color: '#245843',
+              borderColor: '#dfe6dc',
+              backgroundColor: '#ffffff',
+              opacity: 1,
+            }}
+            className="mt-6 flex w-full items-center justify-center gap-2
     rounded-xl border px-4 py-3 text-sm font-semibold
     transition hover:bg-[#f1f5ee]"
-          >
-              <ArrowLeft size={16} color="#245843" />
-              <span style={{ color: '#245843', opacity: 1 }}>
+        >
+          <ArrowLeft size={16} color="#245843" />
+          <span style={{ color: '#245843', opacity: 1 }}>
     Back to sign in
   </span>
-          </button>
+        </button>
       </div>
   )
 }

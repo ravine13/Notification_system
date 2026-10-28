@@ -6,7 +6,8 @@ import {
     Bell, Loader2, CheckCircle2, AlertTriangle, Clock, Send,
 } from 'lucide-react'
 
-const API_URL = 'http://localhost:9123'
+// const API_URL = 'http://localhost:9123'
+const API_URL = 'https://notification-system-tman.onrender.com'
 
 type Zone = { id: number; name: string }
 type TruckRecord = {

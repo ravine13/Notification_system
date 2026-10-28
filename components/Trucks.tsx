@@ -6,7 +6,8 @@ import {
     CheckCircle2, AlertCircle, User as UserIcon, Weight, Tag, CalendarDays, ListChecks, Hash,
 } from 'lucide-react'
 
-const API_URL = 'http://localhost:9123'
+// const API_URL = 'http://localhost:9123'
+const API_URL = 'https://notification-system-tman.onrender.com'
 
 type Status = 'AVAILABLE' | 'IN_SERVICE' | 'MAINTENANCE'
 type Filter = 'ALL' | Status
