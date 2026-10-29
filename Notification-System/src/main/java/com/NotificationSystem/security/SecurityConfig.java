@@ -15,7 +15,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.beans.factory.annotation.Value;
+import java.util.List;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.web.cors.CorsConfiguration;
 
@@ -29,6 +30,9 @@ public class SecurityConfig {
     private final CustomUserDetailsService userDetailsService;
     private final JwtRequestFilter jwtRequestFilter;
     private final PasswordEncoder passwordEncoder;
+
+    @Value("${app.frontend-url}")
+    private String frontendUrl;
 //    private final SecurityContextRepository securityContextRepository;
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -42,25 +46,26 @@ public class SecurityConfig {
                             new CorsConfiguration();
 
                     configuration.setAllowedOrigins(
-                            Arrays.asList(
+                            List.of(frontendUrl,
                                     "http://localhost:3000"
                             )
                     );
 
                     configuration.setAllowedMethods(
-                            Arrays.asList(
+                            List.of(
                                     "GET",
                                     "POST",
                                     "PUT",
+                                    "PATCH",
                                     "DELETE",
                                     "OPTIONS"
                             )
                     );
 
                     configuration.setAllowedHeaders(
-                            Arrays.asList(
-                                    "Content-Type",
-                                    "Authorization"
+                            List.of(
+                                    "*"
+
                             )
                     );
 
