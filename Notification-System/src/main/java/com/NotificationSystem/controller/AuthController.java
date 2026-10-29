@@ -19,10 +19,17 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.beans.factory.annotation.Value;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+
+    @Value("${app.cookie.secure:false}")
+    private boolean cookieSecure;
+
+    @Value("${app.cookie.same-site:Lax}")
+    private String cookieSameSite;
 
     @Autowired
     private AuthenticationManager authenticationManager;
@@ -51,8 +58,8 @@ public class AuthController {
         return ResponseCookie
                 .from("access_token", jwt)
                 .httpOnly(true)
-                .secure(false) // false for local HTTP development, true in production
-                .sameSite("Lax")
+                .secure(cookieSecure) // false for local HTTP development, true in production
+                .sameSite(cookieSameSite)
                 .path("/")
                 .maxAge(60 * 60 * 10)
                 .build();
@@ -116,8 +123,8 @@ public class AuthController {
         ResponseCookie cookie = ResponseCookie
                 .from("access_token", "")
                 .httpOnly(true)
-                .secure(false) // true in production
-                .sameSite("Lax")
+                .secure(cookieSecure) // true in production
+                .sameSite(cookieSameSite)
                 .path("/")
                 .maxAge(0)
                 .build();
