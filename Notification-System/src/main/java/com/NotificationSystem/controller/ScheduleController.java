@@ -5,10 +5,13 @@ import com.NotificationSystem.entities.Schedule;
 import com.NotificationSystem.service.NotificationDispatchService;
 import com.NotificationSystem.service.ScheduleService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -30,35 +33,24 @@ public class ScheduleController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Schedule> getScheduleById(@PathVariable Long id) {
-        Optional<Schedule> schedule =
-                scheduleService.getScheduleById(id);
+        Optional<Schedule> schedule = scheduleService.getScheduleById(id);
 
         return schedule.map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/zone/{zoneId}")
-    public ResponseEntity<List<Schedule>> getSchedulesByZone(
-            @PathVariable Long zoneId) {
-
-        return ResponseEntity.ok(
-                scheduleService.getSchedulesByZoneId(zoneId)
-        );
+    public ResponseEntity<List<Schedule>> getSchedulesByZone(@PathVariable Long zoneId) {
+        return ResponseEntity.ok(scheduleService.getSchedulesByZoneId(zoneId));
     }
 
     @GetMapping("/status/{status}")
-    public ResponseEntity<List<Schedule>> getSchedulesByStatus(
-            @PathVariable Schedule.Status status) {
-
-        return ResponseEntity.ok(
-                scheduleService.getSchedulesByStatus(status)
-        );
+    public ResponseEntity<List<Schedule>> getSchedulesByStatus(@PathVariable Schedule.Status status) {
+        return ResponseEntity.ok(scheduleService.getSchedulesByStatus(status));
     }
 
     @PostMapping
-    public ResponseEntity<Schedule> createSchedule(
-            @RequestBody Schedule schedule) {
-
+    public ResponseEntity<Schedule> createSchedule(@RequestBody Schedule schedule) {
         Schedule saved = scheduleService.saveSchedule(schedule);
         return ResponseEntity.ok(saved);
     }
@@ -68,8 +60,7 @@ public class ScheduleController {
             @PathVariable Long id,
             @RequestBody Schedule updatedSchedule) {
 
-        Optional<Schedule> existing =
-                scheduleService.getScheduleById(id);
+        Optional<Schedule> existing = scheduleService.getScheduleById(id);
 
         if (existing.isPresent()) {
             updatedSchedule.setId(id);
@@ -82,7 +73,6 @@ public class ScheduleController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteSchedule(@PathVariable Long id) {
-
         if (scheduleService.getScheduleById(id).isPresent()) {
             scheduleService.deleteSchedule(id);
             return ResponseEntity.noContent().build();
@@ -90,6 +80,7 @@ public class ScheduleController {
             return ResponseEntity.notFound().build();
         }
     }
+
     @PostMapping("/{id}/notify")
     public ResponseEntity<?> notifyZone(
             @PathVariable Long id,
@@ -100,17 +91,15 @@ public class ScheduleController {
     }
 
     @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<Map<String, Object>> handleStatusException(
-            ResponseStatusException ex) {
+    public ResponseEntity<Map<String, Object>> handleStatusException(ResponseStatusException ex) {
+        HttpStatusCode code = ex.getStatusCode();
+        HttpStatus status = HttpStatus.resolve(code.value());
 
-        return ResponseEntity
-                .status(ex.getStatusCode())
-                .body(Map.of(
-                        "status", ex.getStatusCode().value(),
-                        "error", "Conflict",
-                        "message", ex.getReason()
-                ));
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("status", code.value());
+        body.put("error", status != null ? status.getReasonPhrase() : "Error");
+        body.put("message", ex.getReason() != null ? ex.getReason() : "Request failed");
+
+        return ResponseEntity.status(code).body(body);
     }
 }
-
-

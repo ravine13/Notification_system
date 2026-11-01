@@ -8,10 +8,9 @@ import com.NotificationSystem.repositories.ResidentRepository;
 import com.NotificationSystem.repositories.ScheduleRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.beans.factory.annotation.Value;
-
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
@@ -31,10 +30,11 @@ public class NotificationDispatchService {
     private NotificationRepository notificationRepository;
     @Autowired
     private AfricaTalkingSmsService smsService;
-    @Value("${whatsapp.mode:text}")
-    private String whatsappMode;
     @Autowired
     private WhatsAppService whatsAppService;
+
+    @Value("${whatsapp.mode:text}")
+    private String whatsappMode;
 
     public Map<String, Object> queueZoneNotifications(Long scheduleId, Notification.Channel channel) {
         Schedule schedule = scheduleRepository.findById(scheduleId)
@@ -57,12 +57,17 @@ public class NotificationDispatchService {
                 })
                 .toList();
 
-        String messageText = "Waste collection in your zone is scheduled for "
-                + schedule.getCollectionDate() + ". Please have your waste ready.";
-
+        String zoneName = schedule.getZone().getName();
         LocalDateTime now = LocalDateTime.now();
 
         List<Notification> queued = toNotify.stream().map(resident -> {
+            String name = resident.getName() == null ? "" : resident.getName().trim();
+            String firstName = name.isEmpty() ? "resident" : name.split("\\s+")[0];
+
+            String messageText = "Hello " + firstName + ", waste collection for "
+                    + zoneName + " zone is scheduled on "
+                    + schedule.getCollectionDate() + ". Please have your waste ready.";
+
             Notification n = new Notification();
             n.setSchedule(schedule);
             n.setResident(resident);
@@ -136,5 +141,4 @@ public class NotificationDispatchService {
             return null;
         }
     }
-
 }
