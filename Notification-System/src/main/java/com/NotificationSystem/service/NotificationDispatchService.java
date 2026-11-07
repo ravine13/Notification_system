@@ -102,7 +102,8 @@ public class NotificationDispatchService {
         for (Notification n : notifications) {
             try {
                 if (n.getChannel() == Notification.Channel.SMS) {
-                    smsService.sendSms(n.getPhoneNumber(), n.getMessage());
+                    String response = smsService.sendSms(n.getPhoneNumber(), n.getMessage());
+                    n.setWhatsappMessageId(extractSmsMessageId(response));
                 } else {
                     String response;
                     if ("template".equalsIgnoreCase(whatsappMode)) {
@@ -116,13 +117,15 @@ public class NotificationDispatchService {
                     } else {
                         response = whatsAppService.sendMessage(n.getPhoneNumber(), n.getMessage());
                     }
-                    n.setWhatsappMessageId(extractMessageId(response));
+                    n.setWhatsappMessageId(extractWhatsAppMessageId(response));
                 }
                 n.setStatus(Notification.Status.SENT);
                 n.setSentAt(LocalDateTime.now());
             } catch (Exception e) {
                 System.out.println("Dispatch Failed for " + n.getPhoneNumber() + ": " + e.getMessage());
                 n.setStatus(Notification.Status.FAILED);
+                String msg = e.getMessage();
+                n.setErrorDetail(msg != null && msg.length() > 250 ? msg.substring(0, 250) : msg);
             }
             n.setUpdatedAt(LocalDateTime.now());
             notificationRepository.save(n);
@@ -134,10 +137,21 @@ public class NotificationDispatchService {
         }
     }
 
-    private String extractMessageId(String json) {
+    // WhatsApp: {"messages":[{"id":"wamid..."}]}
+    private String extractWhatsAppMessageId(String json) {
         try {
             return new ObjectMapper().readTree(json)
                     .path("messages").path(0).path("id").asText(null);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+
+    private String extractSmsMessageId(String json) {
+        try {
+            return new ObjectMapper().readTree(json)
+                    .path("SMSMessageData").path("Recipients").path(0).path("messageId").asText(null);
         } catch (Exception e) {
             return null;
         }
