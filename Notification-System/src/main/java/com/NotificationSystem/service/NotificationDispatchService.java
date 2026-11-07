@@ -43,6 +43,7 @@ public class NotificationDispatchService {
         List<Resident> residents = residentRepository.findByZone_Id(schedule.getZone().getId());
         List<Notification> existing = notificationRepository.findBySchedule_Id(scheduleId);
         Set<Long> alreadyNotified = existing.stream()
+                .filter(n -> n.getChannel() == channel && n.getStatus() != Notification.Status.FAILED)
                 .map(n -> n.getResident().getId())
                 .collect(Collectors.toSet());
 
