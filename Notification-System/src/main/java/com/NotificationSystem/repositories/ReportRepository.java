@@ -46,10 +46,7 @@ public interface ReportRepository extends Repository<Schedule, Long> {
         Notification.Channel getChannel();
         Long getTotal();
     }
-    interface FailureCount {
-        String getDetail();
-        Long getTotal();
-    }
+
     interface CollectionStatusCount {
         Collection.Status getStatus();
         Long getTotal();
@@ -68,6 +65,12 @@ public interface ReportRepository extends Repository<Schedule, Long> {
     interface TruckScheduleCount {
         Long getTruckId();
         Schedule.Status getStatus();
+        Long getTotal();
+    }
+
+    interface FailureCount{
+        String getCode();
+        String getDetail();
         Long getTotal();
     }
     @Query("select s.status as status, count(s) as total from Schedule s " +
@@ -110,10 +113,13 @@ public interface ReportRepository extends Repository<Schedule, Long> {
     List<NotificationChannelCount> notificationsByChannel(@Param("start") LocalDateTime start,
                                                           @Param("end") LocalDateTime end);
 
-    @Query("select n.errorDetail as detail, count(n) as total from Notification n " +
-            "where n.status = :failedStatus and n.errorDetail is not null " +
+    @Query("select coalesce(n.errorCode, 'UNKNOWN') as code, " +
+            "max(n.errorDetail) as detail, " +
+            "count(n) as total from Notification n " +
+            "where n.status = :failedStatus " +
             "and n.createdAt >= :start and n.createdAt < :end " +
-            "group by n.errorDetail order by count(n) desc")
+            "group by coalesce(n.errorCode, 'UNKNOWN') " +
+            "order by count(n) desc")
     List<FailureCount> notificationFailures(@Param("failedStatus") Notification.Status failedStatus,
                                             @Param("start") LocalDateTime start,
                                             @Param("end") LocalDateTime end);
@@ -136,7 +142,7 @@ public interface ReportRepository extends Repository<Schedule, Long> {
                                                 @Param("to") LocalDate to);
 
 
-    // Zones and residents (coverage)
+
 
     @Query("select z.id as id, z.name as name, z.collectionDay as collectionDay " +
             "from Zone z order by z.name")

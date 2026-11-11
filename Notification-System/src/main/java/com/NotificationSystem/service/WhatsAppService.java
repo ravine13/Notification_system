@@ -3,9 +3,12 @@ package com.NotificationSystem.service;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.web.client.ResourceAccessException;
 
 import java.util.HashMap;
 import java.util.List;
@@ -25,6 +28,23 @@ public class WhatsAppService {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
+
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+
+    private MessagingException toFailure(HttpStatusCodeException e) {
+        String body = e.getResponseBodyAsString();
+        int http = e.getStatusCode().value();
+        try {
+            JsonNode err = MAPPER.readTree(body).path("error");
+            if (!err.isMissingNode()) {
+                String code = err.path("code").asText("HTTP_" + http);
+                String msg = err.path("error_data").path("details")
+                        .asText(err.path("message").asText("WhatsApp returned HTTP " + http));
+                return new MessagingException(code, msg, e);
+            }
+        } catch (Exception ignored) { }
+        return new MessagingException("HTTP_" + http, "WhatsApp returned HTTP " + http, e);
+    }
 
     public String sendTemplateMessage(String phoneNumber, String templateName, String languageCode, String collectionDate) {
 
@@ -73,7 +93,9 @@ public class WhatsAppService {
 
         } catch (HttpStatusCodeException e) {
             System.out.println("WhatsApp error: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
-            throw new RuntimeException("WhatsApp failed: " + e.getResponseBodyAsString(), e);
+            throw toFailure(e);
+        } catch (ResourceAccessException e) {
+            throw new MessagingException("NETWORK", "Could not reach WhatsApp: " + e.getMessage(), e);
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("WhatsApp unexpected error: " + e.getMessage(), e);
@@ -108,10 +130,11 @@ public class WhatsAppService {
             ResponseEntity<String> response =
                     restTemplate.postForEntity(url, request, String.class);
             return response.getBody();
-        } catch (HttpClientErrorException e) {
-            System.out.println("Whatsapp error: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
-            throw new RuntimeException("WhatsApp failed: " + e.getResponseBodyAsString(), e);
-
+        } catch (HttpStatusCodeException e) {
+            System.out.println("WhatsApp error: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
+            throw toFailure(e);
+        } catch (ResourceAccessException e) {
+            throw new MessagingException("NETWORK", "Could not reach WhatsApp: " + e.getMessage(), e);
         }
     }
 }

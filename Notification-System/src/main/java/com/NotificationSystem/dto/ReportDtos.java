@@ -44,7 +44,7 @@ public final class ReportDtos {
             List<FailureReason> topFailures
     ) {}
 
-    public record FailureReason(String detail, long count) {}
+    public record FailureReason(String code,String detail, long count) {}
 
     public record CollectionsSection(
             long total,

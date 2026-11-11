@@ -79,7 +79,7 @@ public class ReportSummaryService {
                 .notificationFailures(Notification.Status.FAILED, start, end)
                 .stream()
                 .limit(5)
-                .map(f -> new FailureReason(f.getDetail(), n(f.getTotal())))
+                .map(f -> new FailureReason(f.getCode(),f.getDetail(), n(f.getTotal())))
                 .toList();
 
         return new NotificationsSection(

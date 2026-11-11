@@ -122,9 +122,12 @@ public class NotificationDispatchService {
                 n.setStatus(Notification.Status.SENT);
                 n.setSentAt(LocalDateTime.now());
             } catch (Exception e) {
-                System.out.println("Dispatch Failed for " + n.getPhoneNumber() + ": " + e.getMessage());
-                n.setStatus(Notification.Status.FAILED);
+                String code = (e instanceof MessagingException me) ? me.getCode() : null;
                 String msg = e.getMessage();
+
+                System.out.println("Dispatch Failed for " + n.getPhoneNumber() + ": " + msg);
+                n.setStatus(Notification.Status.FAILED);
+                n.setErrorCode(code);
                 n.setErrorDetail(msg != null && msg.length() > 250 ? msg.substring(0, 250) : msg);
             }
             n.setUpdatedAt(LocalDateTime.now());
@@ -137,7 +140,6 @@ public class NotificationDispatchService {
         }
     }
 
-    // WhatsApp: {"messages":[{"id":"wamid..."}]}
     private String extractWhatsAppMessageId(String json) {
         try {
             return new ObjectMapper().readTree(json)

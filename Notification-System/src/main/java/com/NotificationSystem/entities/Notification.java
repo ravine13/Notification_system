@@ -69,4 +69,8 @@ public class Notification {
 
     @Column(name = "error_detail")
     private String errorDetail;
+
+    @Column(name = "error_code", length = 60)
+    private String errorCode;
+
 }
