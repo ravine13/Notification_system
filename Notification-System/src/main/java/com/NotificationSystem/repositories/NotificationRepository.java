@@ -14,6 +14,8 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     List<Notification> findBySchedule_Id(Long scheduleId);
 
+    boolean existsBySchedule_Id(Long scheduleId);
+
     List<Notification> findByResident_Id(Long residentId);
 
     List<Notification> findByStatus(Notification.Status status);

@@ -2,6 +2,7 @@ package com.NotificationSystem.service;
 
 import com.NotificationSystem.entities.Schedule;
 import com.NotificationSystem.entities.Truck;
+import com.NotificationSystem.repositories.NotificationRepository;
 import com.NotificationSystem.repositories.ScheduleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,6 +19,9 @@ public class ScheduleService {
 
     @Autowired
     private ScheduleRepository scheduleRepository;
+
+    @Autowired
+    private NotificationRepository notificationRepository;
 
     public List<Schedule> getAllSchedules() {
         return scheduleRepository.findAll();
@@ -58,6 +62,10 @@ public class ScheduleService {
     }
 
     public void deleteSchedule(Long id) {
+        if(notificationRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "This schedule already has notification, so it can't deleted. Cancel it instead");
+        }
         scheduleRepository.deleteById(id);
     }
 
