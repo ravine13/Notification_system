@@ -7,6 +7,7 @@ import com.NotificationSystem.repositories.NotificationRepository;
 import com.NotificationSystem.repositories.ResidentRepository;
 import com.NotificationSystem.repositories.ScheduleRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
@@ -20,6 +21,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class NotificationDispatchService {
 
     @Autowired
@@ -51,8 +53,8 @@ public class NotificationDispatchService {
                 .filter(r -> {
                     boolean duplicate = alreadyNotified.contains(r.getId());
                     if (duplicate) {
-                        System.out.println("Duplicate prevented: schedule "
-                                + scheduleId + ", resident " + r.getId());
+                        log.info("Dispatch: skipped resident {} on schedule {} ({}), already notified",
+                                r.getId(), scheduleId, channel);
                     }
                     return !duplicate;
                 })
@@ -83,9 +85,12 @@ public class NotificationDispatchService {
 
         List<Notification> saved = notificationRepository.saveAll(queued);
 
-        dispatchAsync(saved);
-
         int duplicatesPrevented = residents.size() - toNotify.size();
+
+        log.info("Dispatch: schedule {} via {}: {} residents in zone, {} queued, {} skipped",
+                scheduleId, channel, residents.size(), saved.size(), duplicatesPrevented);
+
+        dispatchAsync(saved);
 
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("queued", saved.size());
@@ -99,7 +104,13 @@ public class NotificationDispatchService {
 
     @Async
     public void dispatchAsync(List<Notification> notifications) {
+        int sent = 0;
+        int failed = 0;
+
         for (Notification n : notifications) {
+            log.info("Dispatch: notification {} to resident {} via {} (thread {})",
+                    n.getId(), n.getResident().getId(), n.getChannel(),
+                    Thread.currentThread().getName());
             try {
                 if (n.getChannel() == Notification.Channel.SMS) {
                     String response = smsService.sendSms(n.getPhoneNumber(), n.getMessage());
@@ -121,14 +132,21 @@ public class NotificationDispatchService {
                 }
                 n.setStatus(Notification.Status.SENT);
                 n.setSentAt(LocalDateTime.now());
+                sent++;
             } catch (Exception e) {
                 String code = (e instanceof MessagingException me) ? me.getCode() : null;
                 String msg = e.getMessage();
 
-                System.out.println("Dispatch Failed for " + n.getPhoneNumber() + ": " + msg);
+                if (e instanceof MessagingException) {
+                    log.warn("Dispatch: notification {} FAILED [{}]: {}", n.getId(), code, msg);
+                } else {
+                    log.error("Dispatch: notification {} FAILED with an unexpected error", n.getId(), e);
+                }
+
                 n.setStatus(Notification.Status.FAILED);
                 n.setErrorCode(code);
                 n.setErrorDetail(msg != null && msg.length() > 250 ? msg.substring(0, 250) : msg);
+                failed++;
             }
             n.setUpdatedAt(LocalDateTime.now());
             notificationRepository.save(n);
@@ -138,6 +156,9 @@ public class NotificationDispatchService {
             } catch (InterruptedException ignored) {
             }
         }
+
+        log.info("Dispatch: batch finished: {} sent, {} failed, {} total",
+                sent, failed, notifications.size());
     }
 
     private String extractWhatsAppMessageId(String json) {
@@ -148,7 +169,6 @@ public class NotificationDispatchService {
             return null;
         }
     }
-
 
     private String extractSmsMessageId(String json) {
         try {
